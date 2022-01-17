@@ -2,18 +2,26 @@ package com.japharr.socialmedia.verticle;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Promise;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.auth.VertxContextPRNG;
 import io.vertx.ext.auth.authentication.AuthenticationProvider;
 import io.vertx.ext.auth.sqlclient.SqlAuthentication;
 import io.vertx.ext.auth.sqlclient.SqlAuthenticationOptions;
+import io.vertx.ext.auth.sqlclient.SqlAuthorization;
 import io.vertx.ext.auth.sqlclient.SqlUserUtil;
+import io.vertx.ext.jdbc.JDBCClient;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
+import io.vertx.jdbcclient.JDBCConnectOptions;
+import io.vertx.jdbcclient.JDBCPool;
 import io.vertx.pgclient.PgConnectOptions;
 import io.vertx.pgclient.PgPool;
 import io.vertx.sqlclient.PoolOptions;
 import io.vertx.sqlclient.SqlClient;
+import io.vertx.sqlclient.Tuple;
+
 import org.postgresql.PGProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +31,7 @@ import java.util.Properties;
 
 public class AuthVerticle extends AbstractVerticle {
   private SqlClient sqlClient;
-  private AuthenticationProvider authenticationProvider;
+  private SqlAuthentication authenticationProvider;
   private SqlUserUtil userUtil;
 
   private static final Logger logger = LoggerFactory.getLogger(AuthVerticle.class);
@@ -44,8 +52,7 @@ public class AuthVerticle extends AbstractVerticle {
     router.post().handler(bodyHandler);
     router.put().handler(bodyHandler);
 
-    router.post("/api/register")
-      .handler(this::register);
+    router.get("/api/register").handler(this::register);
 
     vertx.createHttpServer()
       .requestHandler(router)
@@ -63,12 +70,21 @@ public class AuthVerticle extends AbstractVerticle {
     String username = body.getString("username");
     String password = body.getString("password");
 
-    userUtil
-      .createUser("john", "pass123", rx -> {
+    String hash = authenticationProvider.hash(
+      "pbkdf2", // hashing algorithm (OWASP recommended)
+      VertxContextPRNG.current().nextString(32), // secure random salt
+      password // password
+    );
+
+    sqlClient
+      .preparedQuery("INSERT INTO users (username, password) VALUES ($1, $2)")
+      .execute(Tuple.of(username, hash))
+      .onComplete(rx -> {
         if(rx.succeeded()) {
           ctx.response().setStatusCode(200).end("user created!");
         } else {
           logger.error("error: {}", rx.cause().getMessage());
+          rx.cause().printStackTrace();
           ctx.response().setStatusCode(500).end(rx.cause().getMessage());
         }
       });
@@ -81,8 +97,6 @@ public class AuthVerticle extends AbstractVerticle {
       return ctx.getBodyAsJson();
     }
   }
-
-
 
   private PgConnectOptions connectOptions() {
     JsonObject dbConfig = config().getJsonObject("db", new JsonObject());

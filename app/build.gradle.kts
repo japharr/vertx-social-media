@@ -11,9 +11,13 @@ dependencies {
   implementation("io.vertx:vertx-config-yaml:$vertxVersion")
   implementation("io.vertx:vertx-auth-sql-client:$vertxVersion")
   implementation("io.vertx:vertx-pg-client:$vertxVersion")
+  implementation("io.vertx:vertx-jdbc-client:$vertxVersion")
   implementation("ch.qos.logback:logback-classic:$logbackClassicVersion")
-  implementation("org.flywaydb:flyway-core:$flywayVersion")
+  implementation("org.flywaydb:flyway-core:8.3.0")
   implementation("org.postgresql:postgresql:$postgresVersion")
+  implementation("org.testcontainers:postgresql:1.16.2")
+
+  implementation("com.h2database:h2:2.0.206")
 
   // Use JUnit Jupiter for testing.
   testImplementation("org.junit.jupiter:junit-jupiter:$jupiterVersion")

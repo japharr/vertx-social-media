@@ -3,6 +3,7 @@ package com.japharr.socialmedia;
 import com.japharr.socialmedia.verticle.AppVerticle;
 import com.japharr.socialmedia.verticle.AuthVerticle;
 import com.japharr.socialmedia.verticle.DatabaseVerticle;
+import com.japharr.socialmedia.verticle.WebVerticle;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.config.ConfigRetrieverOptions;
 import io.vertx.config.ConfigStoreOptions;
@@ -48,11 +49,12 @@ public class App {
   private static Future<Void> deployVerticle(JsonObject config) {
     DeploymentOptions opts = new DeploymentOptions().setConfig(config);
 
-    //Future<String> dbVerticle = vertx.deployVerticle(new DatabaseVerticle(), opts);
-    //Future<String> appVerticle = vertx.deployVerticle(new AppVerticle(), opts);
-    Future<String> authVerticle = vertx.deployVerticle(new AuthVerticle(), opts);
+    Future<String> dbVerticle = vertx.deployVerticle(new DatabaseVerticle(), opts);
+    Future<String> appVerticle = vertx.deployVerticle(new AppVerticle(), opts);
+    //Future<String> authVerticle = vertx.deployVerticle(new AuthVerticle(), opts);
+    Future<String> webVerticle = vertx.deployVerticle(new WebVerticle(), opts);
 
-    return authVerticle.mapEmpty();
+    return CompositeFuture.all(dbVerticle, appVerticle, webVerticle).mapEmpty();
   }
 }
 

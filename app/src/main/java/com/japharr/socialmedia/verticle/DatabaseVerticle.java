@@ -28,9 +28,9 @@ public class DatabaseVerticle extends AbstractVerticle {
 
   private Future<Void> doDatabaseMigrations() {
     JsonObject dbConfig = config().getJsonObject("db", new JsonObject());
-    String url = dbConfig.getString("url", "jdbc:postgresql://127.0.0.1:5432/social_media");
-    String adminUser = dbConfig.getString("user", "postgres");
-    String adminPass = dbConfig.getString("password", "introduction");
+    String url = dbConfig.getString("url", "jdbc:h2:mem:test_mem");
+    String adminUser = dbConfig.getString("user", "sa");
+    String adminPass = dbConfig.getString("password", "");
 
     Flyway flyway = Flyway.configure()
       .dataSource(url, adminUser, adminPass)

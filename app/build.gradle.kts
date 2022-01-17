@@ -13,6 +13,7 @@ dependencies {
   implementation("io.vertx:vertx-auth-sql-client:$vertxVersion")
   implementation("io.vertx:vertx-pg-client:$vertxVersion")
   implementation("io.vertx:vertx-jdbc-client:$vertxVersion")
+  implementation("io.vertx:vertx-rx-java3:$vertxVersion")
 
   implementation("ch.qos.logback:logback-classic:$logbackClassicVersion")
   implementation("org.flywaydb:flyway-core:$flywayVersion")

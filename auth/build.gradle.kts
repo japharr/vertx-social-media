@@ -14,6 +14,12 @@ dependencies {
   implementation("io.vertx:vertx-pg-client:$vertxVersion")
   implementation("io.vertx:vertx-jdbc-client:$vertxVersion")
   implementation("io.vertx:vertx-rx-java3:$vertxVersion")
+  implementation("io.vertx:vertx-service-proxy:$vertxVersion")
+  implementation("io.vertx:vertx-rx-java3-gen:$vertxVersion")
+
+  annotationProcessor("io.vertx:vertx-service-proxy:$vertxVersion")
+  annotationProcessor("io.vertx:vertx-codegen:$vertxVersion:processor")
+  annotationProcessor("io.vertx:vertx-rx-java3-gen:$vertxVersion")
 
   implementation("ch.qos.logback:logback-classic:$logbackClassicVersion")
   implementation("org.flywaydb:flyway-core:$flywayVersion")

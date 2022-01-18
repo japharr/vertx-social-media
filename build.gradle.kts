@@ -23,4 +23,9 @@ subprojects {
 
   apply(plugin = "java")
   apply(plugin = "application")
+
+  tasks.withType<JavaCompile> {
+    sourceCompatibility = "11"
+    targetCompatibility = "11"
+  }
 }

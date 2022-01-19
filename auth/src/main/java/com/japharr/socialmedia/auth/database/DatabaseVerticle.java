@@ -28,7 +28,7 @@ public class DatabaseVerticle extends AbstractVerticle {
 
     pgPool = PgPool.pool(vertx, connectOptions, poolOptions);
 
-    String databaseEbAddress = config().getJsonObject("eb.addresses").getString("db.user");
+    String databaseEbAddress = config().getJsonObject(EB_ADDRESSES).getString(EB_DB_USER_ADDRESS);
 
     UserService.create(pgPool, result -> {
       if(result.succeeded()) {
@@ -52,7 +52,7 @@ public class DatabaseVerticle extends AbstractVerticle {
   }
 
   @Override
-  public void stop() throws Exception {
+  public void stop() {
     pgPool.close();
   }
 }

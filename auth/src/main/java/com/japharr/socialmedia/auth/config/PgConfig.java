@@ -8,6 +8,8 @@ public abstract class PgConfig {
   public static PgConnectOptions pgConnectOpts(JsonObject config) {
     JsonObject db = config.getJsonObject("db", new JsonObject());
 
+    System.out.println("db: " + db);
+
     return new PgConnectOptions()
       .setPort(db.getInteger("port"))
       .setHost(db.getString("host"))
@@ -18,8 +20,8 @@ public abstract class PgConfig {
 
   public static PoolOptions poolOptions(JsonObject config) {
     JsonObject db = config.getJsonObject("db", new JsonObject());
-    JsonObject pool = config.getJsonObject("pool", new JsonObject());
+    JsonObject pool = db.getJsonObject("pool", new JsonObject());
     return new PoolOptions()
-      .setMaxSize(db.getInteger("max-size"));
+      .setMaxSize(pool.getInteger("max-size"));
   }
 }

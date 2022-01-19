@@ -14,19 +14,25 @@ import org.slf4j.LoggerFactory;
 public class DatabaseVerticle extends AbstractVerticle {
   private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseVerticle.class);
 
+  private static final String EB_ADDRESSES = "eb.addresses";
+  private static final String EB_DB_USER_ADDRESS = "db.user";
+
   private PgPool pgPool;
 
   @Override
   public void start(Promise<Void> startPromise) throws Exception {
+    LOGGER.info("deploying DatabaseVerticle, {}", config());
+
     PgConnectOptions connectOptions = PgConfig.pgConnectOpts(config());
     PoolOptions poolOptions = PgConfig.poolOptions(config());
 
     pgPool = PgPool.pool(vertx, connectOptions, poolOptions);
 
-    String databaseEbAddress = config().getString("CONFIG_DB_EB_QUEUE");
+    String databaseEbAddress = config().getJsonObject("eb.addresses").getString("db.user");
 
     UserService.create(pgPool, result -> {
       if(result.succeeded()) {
+        LOGGER.info("succeeded");
         new ServiceBinder(vertx)
           .setAddress(databaseEbAddress)
           .register(UserService.class, result.result())
@@ -38,7 +44,7 @@ public class DatabaseVerticle extends AbstractVerticle {
             LOGGER.info("PostgreSQL database service is successfully established in \"" + databaseEbAddress + "\"");
             startPromise.complete();
           });
-      }else {
+      } else {
         LOGGER.error("Failed to initiate the connection to database", result.cause());
         startPromise.fail(result.cause());
       }

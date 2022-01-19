@@ -26,6 +26,7 @@ public class UserServiceImpl implements UserService {
   private SqlAuthentication sqlAuth;
 
   public UserServiceImpl(io.vertx.pgclient.PgPool pgPool, Handler<AsyncResult<UserService>> resultHandler) {
+    LOGGER.info("UserServiceImpl");
     this.pgPool = new PgPool(pgPool);
     this.sqlAuth = SqlAuthentication.create(this.pgPool, new SqlAuthenticationOptions()) ;
 

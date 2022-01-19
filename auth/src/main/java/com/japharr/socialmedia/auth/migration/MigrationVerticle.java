@@ -2,6 +2,8 @@ package com.japharr.socialmedia.auth.migration;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Maybe;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava3.core.AbstractVerticle;
 import org.flywaydb.core.Flyway;
@@ -9,34 +11,44 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class MigrationVerticle extends AbstractVerticle {
-  private static final Logger logger = LoggerFactory.getLogger(MigrationVerticle.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(MigrationVerticle.class);
 
   @Override
-  public Completable rxStart() {
+  public void start(Promise<Void> startFuture){
     doDbMigrations()
-      .doOnError(err -> logger.error("Woops", err))
-      .subscribe();
-
-    return Completable.complete();
+      .onComplete(rx -> {
+        if(rx.succeeded()) {
+          LOGGER.info("success");
+          startFuture.complete();
+        } else {
+          LOGGER.error("error");
+          startFuture.fail(rx.cause());
+        }
+      });
   }
 
-  private Maybe<Void> doDbMigrations() {
-    logger.info("doDbMigrations");
+  private Future<Void> doDbMigrations() {
+    LOGGER.info("doDbMigrations");
     JsonObject dbConfig = config().getJsonObject("db", new JsonObject());
 
-    String url = dbConfig.getString("url", "jdbc:h2:mem:test_mem");
-    String adminUser = dbConfig.getString("user", "sa");
-    String adminPass = dbConfig.getString("password", "");
+
+    String host = dbConfig.getString("host");
+    int port = dbConfig.getInteger("port");
+    String database = dbConfig.getString("database");
+    String user = dbConfig.getString("user");
+    String password = dbConfig.getString("password", "");
+
+    String url = String.format("jdbc:postgresql://%s:%d/%s", host, port, database);
 
     Flyway flyway = Flyway.configure()
-      .dataSource(url, adminUser, adminPass)
+      .dataSource(url, user, password)
       .load();
 
     try {
       flyway.migrate();
-      return Maybe.empty();
+      return Future.succeededFuture();
     } catch (Exception ex) {
-      return Maybe.error(ex);
+      return Future.failedFuture(ex);
     }
   }
 }

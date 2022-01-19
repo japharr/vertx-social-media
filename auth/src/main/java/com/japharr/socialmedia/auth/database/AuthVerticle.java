@@ -1,9 +1,11 @@
-package com.japharr.socialmedia.auth.verticle;
+package com.japharr.socialmedia.auth.database;
 
 import com.japharr.socialmedia.auth.config.PgConfig;
+import com.japharr.socialmedia.auth.database.service.UserService;
 import io.reactivex.rxjava3.core.Completable;
 import io.vertx.ext.auth.sqlclient.SqlAuthenticationOptions;
 import io.vertx.pgclient.PgConnectOptions;
+import io.vertx.pgclient.impl.PgPoolOptions;
 import io.vertx.rxjava3.core.AbstractVerticle;
 import io.vertx.rxjava3.ext.auth.sqlclient.SqlAuthentication;
 import io.vertx.rxjava3.pgclient.PgPool;
@@ -16,7 +18,6 @@ public class AuthVerticle extends AbstractVerticle {
   private static final Logger logger = LoggerFactory.getLogger(AuthVerticle.class);
 
   private SqlClient sqlClient;
-  private SqlAuthentication sqlAuthentication;
 
   @Override
   public Completable rxStart() {
@@ -24,7 +25,12 @@ public class AuthVerticle extends AbstractVerticle {
     PoolOptions pgPool = PgConfig.poolOptions(config());
 
     sqlClient = PgPool.client(vertx, connectOptions, pgPool);
-    sqlAuthentication = SqlAuthentication.create(sqlClient, new SqlAuthenticationOptions());
+
+    String databaseEbAddress = config().getString("CONFIG_DB_EB_QUEUE");
+
+    UserService.create(sqlClient, result -> {
+
+    });
 
     return Completable.complete();
   }

@@ -26,6 +26,8 @@ dependencies {
   implementation("org.postgresql:postgresql:$postgresVersion")
   implementation("org.testcontainers:postgresql:$testContainersVersion")
 
+  implementation(project(":common"))
+
   // Use JUnit Jupiter for testing.
   testImplementation("org.junit.jupiter:junit-jupiter:$jupiterVersion")
 }

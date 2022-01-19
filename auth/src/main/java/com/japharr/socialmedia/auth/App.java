@@ -1,12 +1,9 @@
 package com.japharr.socialmedia.auth;
 
-import com.japharr.socialmedia.auth.verticle.DbMigrationVerticle;
-import io.reactivex.rxjava3.core.Completable;
-import io.reactivex.rxjava3.core.Flowable;
+import com.japharr.socialmedia.auth.migration.MigrationVerticle;
 import io.reactivex.rxjava3.core.Single;
 import io.vertx.config.ConfigRetrieverOptions;
 import io.vertx.config.ConfigStoreOptions;
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.rxjava3.config.ConfigRetriever;
 import io.vertx.core.json.JsonObject;
@@ -45,6 +42,6 @@ public class App {
   private static Single<String> deployVerticle(JsonObject config) {
     DeploymentOptions opts = new DeploymentOptions().setConfig(config);
 
-    return vertx.deployVerticle(new DbMigrationVerticle(), opts);
+    return vertx.deployVerticle(new MigrationVerticle(), opts);
   }
 }

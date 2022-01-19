@@ -1,4 +1,4 @@
-package com.japharr.socialmedia.auth.verticle;
+package com.japharr.socialmedia.auth.migration;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Maybe;
@@ -8,8 +8,8 @@ import org.flywaydb.core.Flyway;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DbMigrationVerticle extends AbstractVerticle {
-  private static final Logger logger = LoggerFactory.getLogger(DbMigrationVerticle.class);
+public class MigrationVerticle extends AbstractVerticle {
+  private static final Logger logger = LoggerFactory.getLogger(MigrationVerticle.class);
 
   @Override
   public Completable rxStart() {

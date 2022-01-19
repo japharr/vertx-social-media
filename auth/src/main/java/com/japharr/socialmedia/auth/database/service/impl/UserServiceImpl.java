@@ -8,6 +8,7 @@ import io.vertx.core.Handler;
 import io.vertx.ext.auth.VertxContextPRNG;
 import io.vertx.ext.auth.sqlclient.SqlAuthenticationOptions;
 import io.vertx.rxjava3.ext.auth.sqlclient.SqlAuthentication;
+import io.vertx.rxjava3.pgclient.PgPool;
 import io.vertx.rxjava3.sqlclient.SqlClient;
 import io.vertx.rxjava3.sqlclient.Tuple;
 import org.slf4j.Logger;
@@ -16,16 +17,30 @@ import org.slf4j.LoggerFactory;
 public class UserServiceImpl implements UserService {
   private static final Logger LOGGER = LoggerFactory.getLogger(UserServiceImpl.class);
 
+  private static final String SQL_COUNT_USERS = "SELECT COUNT(*) FROM users";
   private static final String INSERT_USER =
       "INSERT INTO users (username, password, email, first_name, last_name, created_date, last_modified_date) " +
       "VALUES ($1, $2, $3, $4, $5, current_timestamp, current_timestamp)";
 
-  private SqlClient sqlClient;
+  private PgPool pgPool;
   private SqlAuthentication sqlAuth;
 
-  public UserServiceImpl(SqlClient sqlClient, Handler<AsyncResult<UserService>> resultHandler) {
-    this.sqlClient = sqlClient;
-    this.sqlAuth = SqlAuthentication.create(sqlClient, new SqlAuthenticationOptions()) ;
+  public UserServiceImpl(io.vertx.pgclient.PgPool pgPool, Handler<AsyncResult<UserService>> resultHandler) {
+    this.pgPool = new PgPool(pgPool);
+    this.sqlAuth = SqlAuthentication.create(this.pgPool, new SqlAuthenticationOptions()) ;
+
+    this.pgPool.rxGetConnection()
+      .flatMap(pgConnection -> pgConnection
+        .query(SQL_COUNT_USERS)
+        .rxExecute()
+        .doAfterTerminate(pgConnection::close))
+      .subscribe(
+        result -> resultHandler.handle(Future.succeededFuture(this)),
+        throwable -> {
+          LOGGER.error("Unable to connect to database", throwable);
+          resultHandler.handle(Future.failedFuture(throwable));
+        }
+      );
   }
 
   @Override
@@ -36,7 +51,7 @@ public class UserServiceImpl implements UserService {
         user.getPassword() // password
     );
 
-    sqlClient.preparedQuery(INSERT_USER)
+    pgPool.preparedQuery(INSERT_USER)
         .rxExecute(Tuple.of(user.getUsername(), hash, user.getEmail(), user.getFirstName(), user.getLastName()))
         .subscribe(
             result -> {resultHandler.handle(Future.succeededFuture());},

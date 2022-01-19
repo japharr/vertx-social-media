@@ -9,14 +9,14 @@ import io.vertx.codegen.annotations.VertxGen;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.rxjava3.sqlclient.SqlClient;
+import io.vertx.pgclient.PgPool;
 
 @VertxGen
 @ProxyGen
 public interface UserService {
   @GenIgnore
-  static UserService create(SqlClient sqlClient, Handler<AsyncResult<UserService>> resultHandler) {
-    return new UserServiceImpl(sqlClient);
+  static UserService create(PgPool pgPool, Handler<AsyncResult<UserService>> resultHandler) {
+    return new UserServiceImpl(pgPool, resultHandler);
   }
 
   @GenIgnore

@@ -1,7 +1,6 @@
 package com.japharr.socialmedia.auth.migration;
 
-import io.reactivex.rxjava3.core.Completable;
-import io.reactivex.rxjava3.core.Maybe;
+import com.japharr.socialmedia.auth.config.PgConfig;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
@@ -29,16 +28,12 @@ public class MigrationVerticle extends AbstractVerticle {
 
   private Future<Void> doDbMigrations() {
     LOGGER.info("doDbMigrations");
-    JsonObject dbConfig = config().getJsonObject("db", new JsonObject());
+    JsonObject db = config().getJsonObject(PgConfig.DB, new JsonObject());
 
+    String user = db.getString(PgConfig.USER);
+    String password = db.getString(PgConfig.PASSWORD);
 
-    String host = dbConfig.getString("host");
-    int port = dbConfig.getInteger("port");
-    String database = dbConfig.getString("database");
-    String user = dbConfig.getString("user");
-    String password = dbConfig.getString("password", "");
-
-    String url = String.format("jdbc:postgresql://%s:%d/%s", host, port, database);
+    String url = PgConfig.resolveUrl(db);
 
     Flyway flyway = Flyway.configure()
       .dataSource(url, user, password)

@@ -1,5 +1,6 @@
 package com.japharr.socialmedia.auth.api;
 
+import com.japharr.socialmedia.auth.api.handler.HttpRequestValidator;
 import com.japharr.socialmedia.auth.api.handler.UserApi;
 import com.japharr.socialmedia.auth.database.service.UserDatabaseService;
 import com.japharr.socialmedia.common.handler.FailureHandler;
@@ -36,7 +37,9 @@ public class WebVerticle extends AbstractVerticle {
     router.post().handler(bodyHandler);
     router.put().handler(bodyHandler);
 
-    router.post(REGISTER_NEW_USER).handler(UserApi.registerUser(userDatabaseService));
+    router.post(REGISTER_NEW_USER)
+        .handler(HttpRequestValidator.validateUser())
+        .handler(UserApi.registerUser(userDatabaseService));
     router.post(AUTHENTICATE_USER).handler(UserApi.authenticate(userDatabaseService));
     router.get(GET_USERS).handler(UserApi.findAll(userDatabaseService));
 

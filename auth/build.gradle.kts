@@ -9,6 +9,7 @@ dependencies {
   val postgresVersion = project.extra["postgresVersion"]
   val testContainersVersion = project.extra["testContainersVersion"]
   val logbackClassicVersion = project.extra["logbackClassicVersion"]
+  val yaviVersion = project.extra["yaviVersion"]
 
   implementation("io.vertx:vertx-web:$vertxVersion")
   implementation("io.vertx:vertx-config:$vertxVersion")
@@ -19,6 +20,7 @@ dependencies {
   implementation("io.vertx:vertx-rx-java3:$vertxVersion")
   implementation("io.vertx:vertx-service-proxy:$vertxVersion")
   implementation("io.vertx:vertx-rx-java3-gen:$vertxVersion")
+  implementation("am.ik.yavi:yavi:$yaviVersion")
 
   annotationProcessor("io.vertx:vertx-service-proxy:$vertxVersion")
   annotationProcessor("io.vertx:vertx-codegen:$vertxVersion:processor")

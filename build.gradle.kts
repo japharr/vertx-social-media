@@ -11,6 +11,7 @@ allprojects {
   extra["postgresVersion"] = "42.3.1"
   extra["logbackClassicVersion"] = "1.2.10"
   extra["testContainersVersion"] = "1.16.2"
+  extra["yaviVersion"] = "0.9.1"
 }
 
 subprojects {

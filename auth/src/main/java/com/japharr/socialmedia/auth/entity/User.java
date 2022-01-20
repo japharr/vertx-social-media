@@ -1,6 +1,8 @@
 package com.japharr.socialmedia.auth.entity;
 
 
+import am.ik.yavi.builder.ValidatorBuilder;
+import am.ik.yavi.core.Validator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import io.vertx.codegen.annotations.DataObject;
@@ -21,6 +23,15 @@ public class User {
   private String firstName;
   @JsonProperty("lastName")
   private String lastName;
+
+  private static final String USERNAME_REGEX_PATTERN = "^(?=.{8,20}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$";
+
+  public static final Validator<User> validator = ValidatorBuilder.<User>of()
+      .constraint(User::getUsername, "username", c ->
+          c.notNull().pattern(USERNAME_REGEX_PATTERN).message("Username must be 8-20 character long"))
+      .constraint(User::getPassword, "password", c -> c.notNull().greaterThanOrEqual(2).lessThanOrEqual(14))
+      .constraint(User::getEmail, "email", c -> c.notNull().email())
+      .build();
 
   public User () {}
 

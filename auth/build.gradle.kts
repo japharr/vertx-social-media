@@ -1,3 +1,6 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
+apply(plugin = "com.github.johnrengelman.shadow")
 
 dependencies {
   val vertxVersion = project.extra["vertxVersion"]
@@ -32,10 +35,27 @@ dependencies {
   testImplementation("org.junit.jupiter:junit-jupiter:$jupiterVersion")
 }
 
+val watchForChange = "src/**/*"
+val doOnChange = "${projectDir}/gradlew classes"
+val mainVerticleName = "com.japharr.socialmedia.auth.MainVerticle"
+val launcherClassName = "io.vertx.core.Launcher"
+
 application {
-  mainClass.set("com.japharr.socialmedia.auth.App")
+  mainClass.set(launcherClassName)
 }
 
 tasks.named<Test>("test") {
   useJUnitPlatform()
+}
+
+tasks.withType<ShadowJar> {
+  archiveClassifier.set("fat")
+  manifest {
+    attributes(mapOf("Main-Verticle" to mainVerticleName))
+  }
+  mergeServiceFiles()
+}
+
+tasks.withType<JavaExec> {
+  args = listOf("run", mainVerticleName, "--redeploy=$watchForChange", "--launcher-class=$launcherClassName", "--on-redeploy=$doOnChange")
 }

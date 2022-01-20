@@ -18,10 +18,10 @@ public class MigrationVerticle extends AbstractVerticle {
       .onComplete(rx -> {
         if(rx.succeeded()) {
           LOGGER.info("success");
-          startFuture.complete();
+          Future.future(p -> startFuture.complete());
         } else {
           LOGGER.error("error");
-          startFuture.fail(rx.cause());
+          Future.future(p -> startFuture.fail(rx.cause()));
         }
       });
   }

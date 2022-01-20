@@ -40,6 +40,6 @@ public abstract class PgConfig {
     int port = db.getInteger(PORT);
     String database = db.getString("database");
 
-    return MessageFormat.format("jdbc:postgresql://{0}:{1}/{2}", host, port, database);
+    return String.format("jdbc:postgresql://%s:%d/%s", host, port, database);
   }
 }

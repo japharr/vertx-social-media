@@ -4,6 +4,7 @@ import com.japharr.socialmedia.auth.api.WebVerticle;
 import com.japharr.socialmedia.auth.database.DatabaseVerticle;
 import com.japharr.socialmedia.auth.migration.MigrationVerticle;
 import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.disposables.Disposable;
 import io.vertx.config.ConfigRetrieverOptions;
 import io.vertx.config.ConfigStoreOptions;
 import io.vertx.core.DeploymentOptions;
@@ -17,28 +18,27 @@ import org.slf4j.LoggerFactory;
 
 public class MainVerticle extends AbstractVerticle {
   private static final Logger LOGGER = LoggerFactory.getLogger(MainVerticle.class);
+  private Disposable disposable;
 
   @Override
   public void start(Promise<Void> startFuture) throws Exception {
-    initConfig()
-      .doOnError(startFuture::fail)
-      .map(this::deployVerticle)
+    disposable = initConfig()
+      .flatMap(this::deployVerticle)
       .subscribe(
         id -> startFuture.complete(),
-        startFuture::fail
+        error -> {
+          LOGGER.error("an error is handled", error);
+          startFuture.fail(error);
+        }
       );
   }
 
   private Single<String> deployVerticle(JsonObject config) {
     var deploymentOptions = new DeploymentOptions().setConfig(config);
 
-    Single<String> migrationDeployment = vertx.deployVerticle(new MigrationVerticle(), deploymentOptions);
-    Single<String> databaseDeployment = vertx.deployVerticle(new DatabaseVerticle(), deploymentOptions);
-    Single<String> webDeployment = vertx.deployVerticle(new WebVerticle(), deploymentOptions);
-
-    return migrationDeployment
-      .flatMap(id -> databaseDeployment)
-      .flatMap(id -> webDeployment);
+    return vertx.deployVerticle(new MigrationVerticle(), deploymentOptions)
+      .flatMap(id -> vertx.deployVerticle(new DatabaseVerticle(), deploymentOptions))
+      .flatMap(id -> vertx.deployVerticle(new WebVerticle(), deploymentOptions));
   }
 
   private Single<JsonObject> initConfig() {
@@ -53,6 +53,12 @@ public class MainVerticle extends AbstractVerticle {
     var configRetriever = ConfigRetriever.create(vertx, retrievalOptions);
 
     return configRetriever.getConfig();
+  }
+
+  @Override
+  public void stop(Promise<Void> stopFuture) throws Exception {
+    if(disposable != null)
+      disposable.dispose();
   }
 
   public static void main(String[] args) {

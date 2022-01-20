@@ -3,6 +3,7 @@ package com.japharr.socialmedia.auth.database;
 import com.japharr.socialmedia.auth.config.PgConfig;
 import com.japharr.socialmedia.auth.database.service.UserService;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.pgclient.PgConnectOptions;
 import io.vertx.pgclient.PgPool;
@@ -38,7 +39,7 @@ public class DatabaseVerticle extends AbstractVerticle {
           .register(UserService.class, result.result())
           .exceptionHandler(throwable -> {
             LOGGER.error("Failed to establish PostgreSQL database service", throwable);
-            startPromise.fail(throwable);
+            //startPromise.fail(throwable);
           })
           .completionHandler(res -> {
             LOGGER.info("PostgreSQL database service is successfully established in \"" + databaseEbAddress + "\"");
@@ -46,7 +47,8 @@ public class DatabaseVerticle extends AbstractVerticle {
           });
       } else {
         LOGGER.error("Failed to initiate the connection to database", result.cause());
-        startPromise.fail(result.cause());
+        //startPromise.fail(result.cause());
+        Future.future(p -> startPromise.fail(result.cause()));
       }
     });
   }

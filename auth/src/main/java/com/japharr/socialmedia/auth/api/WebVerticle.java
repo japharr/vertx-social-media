@@ -2,6 +2,7 @@ package com.japharr.socialmedia.auth.api;
 
 import com.japharr.socialmedia.auth.api.handler.UserApi;
 import com.japharr.socialmedia.auth.database.service.UserService;
+import com.japharr.socialmedia.common.handler.FailureHandler;
 import io.reactivex.rxjava3.core.Completable;
 import io.vertx.core.Promise;
 import io.vertx.rxjava3.core.AbstractVerticle;
@@ -27,7 +28,7 @@ public class WebVerticle extends AbstractVerticle {
     var httpServer = vertx.createHttpServer();
 
     var userService = UserService.createProxy(vertx.getDelegate(),
-      config().getJsonObject("eb.addresses").getString("db.user"));
+      config().getJsonObject(EB_ADDRESSES).getString(EB_DB_USER_ADDRESS));
 
     var bodyHandler = BodyHandler.create();
 
@@ -37,6 +38,8 @@ public class WebVerticle extends AbstractVerticle {
     router.put().handler(bodyHandler);
 
     router.post(REGISTER_NEW_USER).handler(UserApi.registerUser(userService));
+
+    router.route().handler(new FailureHandler());
 
     int httpServerPort = config().getJsonObject(HTTP_KEY).getInteger(PORT_KEY);
 

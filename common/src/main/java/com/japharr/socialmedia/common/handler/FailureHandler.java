@@ -14,7 +14,7 @@ public class FailureHandler implements Handler<RoutingContext> {
   public void handle(RoutingContext routingContext) {
     Throwable failure = routingContext.failure();
      if (failure instanceof BadRequestException) {
-      restResponse(routingContext, 400, errorMessageToErrorBody("Invalid Request"));
+      restResponse(routingContext, 400, errorMessageToErrorBody(failure.getMessage()));
     } else if (failure instanceof ResourceNotFoundException) {
       restResponse(routingContext, 404, errorMessageToErrorBody(failure.getMessage()));
     } else if (failure instanceof DecodeException) {

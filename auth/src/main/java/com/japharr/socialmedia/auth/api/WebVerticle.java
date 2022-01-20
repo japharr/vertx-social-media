@@ -11,6 +11,7 @@ import io.vertx.rxjava3.ext.web.handler.BodyHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.japharr.socialmedia.auth.api.Endpoints.GET_USERS;
 import static com.japharr.socialmedia.auth.api.Endpoints.REGISTER_NEW_USER;
 
 public class WebVerticle extends AbstractVerticle {
@@ -38,8 +39,9 @@ public class WebVerticle extends AbstractVerticle {
     router.put().handler(bodyHandler);
 
     router.post(REGISTER_NEW_USER).handler(UserApi.registerUser(userService));
+    router.get(GET_USERS).handler(UserApi.findAll(userService));
 
-    router.route().handler(new FailureHandler());
+    router.route().failureHandler(new FailureHandler());
 
     int httpServerPort = config().getJsonObject(HTTP_KEY).getInteger(PORT_KEY);
 

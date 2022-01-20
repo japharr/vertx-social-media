@@ -2,13 +2,18 @@ package com.japharr.socialmedia.auth.database.service.impl;
 
 import com.japharr.socialmedia.auth.database.service.UserService;
 import com.japharr.socialmedia.auth.entity.User;
+import com.japharr.socialmedia.common.exception.BadRequestException;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.VertxContextPRNG;
 import io.vertx.ext.auth.sqlclient.SqlAuthenticationOptions;
 import io.vertx.rxjava3.ext.auth.sqlclient.SqlAuthentication;
 import io.vertx.rxjava3.pgclient.PgPool;
+import io.vertx.rxjava3.sqlclient.Row;
+import io.vertx.rxjava3.sqlclient.RowSet;
 import io.vertx.rxjava3.sqlclient.SqlClient;
 import io.vertx.rxjava3.sqlclient.Tuple;
 import org.slf4j.Logger;
@@ -21,6 +26,7 @@ public class UserServiceImpl implements UserService {
   private static final String INSERT_USER =
       "INSERT INTO users (username, password, email, first_name, last_name, created_date, last_modified_date) " +
       "VALUES ($1, $2, $3, $4, $5, current_timestamp, current_timestamp)";
+  private static final String SQL_SELECT_ALL = "SELECT * FROM users";
 
   private PgPool pgPool;
   private SqlAuthentication sqlAuth;
@@ -58,9 +64,41 @@ public class UserServiceImpl implements UserService {
             result -> {resultHandler.handle(Future.succeededFuture());},
             error -> {
               LOGGER.error("unable to create user", error);
-              resultHandler.handle(Future.failedFuture(error));
+              //resultHandler.handle(Future.future(p -> p.fail(new BadRequestException(error))));
+              resultHandler.handle(Future.failedFuture(new BadRequestException(error)));
             }
         );
     return this;
+  }
+
+  @Override
+  public UserService findAll(Handler<AsyncResult<JsonArray>> resultHandler) {
+    pgPool.preparedQuery(SQL_SELECT_ALL)
+        .rxExecute()
+        .subscribe(
+            result -> {
+              var jsonArray = mapToJsonArray(result);
+              resultHandler.handle(Future.succeededFuture(jsonArray));
+            },
+            throwable -> {
+              LOGGER.error("Failed to get the filtered books by the following conditions", throwable);
+              resultHandler.handle(Future.failedFuture(throwable));
+            }
+        );
+
+    return this;
+  }
+
+  private JsonObject mapToJsonObject(Row row) {
+    return new JsonObject()
+        .put("username", row.getValue("username"))
+        .put("email", row.getValue("email"))
+        .put("firstName", row.getValue("first_name"));
+  }
+
+  private JsonArray mapToJsonArray(RowSet<Row> rows) {
+    JsonArray data = new JsonArray();
+    rows.forEach(row -> data.add(mapToJsonObject(row)));
+    return data;
   }
 }

@@ -14,7 +14,6 @@ import io.vertx.rxjava3.ext.auth.sqlclient.SqlAuthentication;
 import io.vertx.rxjava3.pgclient.PgPool;
 import io.vertx.rxjava3.sqlclient.Row;
 import io.vertx.rxjava3.sqlclient.RowSet;
-import io.vertx.rxjava3.sqlclient.SqlClient;
 import io.vertx.rxjava3.sqlclient.Tuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +26,7 @@ public class UserServiceImpl implements UserService {
       "INSERT INTO users (username, password, email, first_name, last_name, created_date, last_modified_date) " +
       "VALUES ($1, $2, $3, $4, $5, current_timestamp, current_timestamp)";
   private static final String SQL_SELECT_ALL = "SELECT * FROM users";
+  private final static String SQL_AUTHENTICATE_QUERY = "SELECT password FROM users WHERE username = $1 OR email = $1";
 
   private PgPool pgPool;
   private SqlAuthentication sqlAuth;
@@ -34,7 +34,8 @@ public class UserServiceImpl implements UserService {
   public UserServiceImpl(io.vertx.pgclient.PgPool pgPool, Handler<AsyncResult<UserService>> resultHandler) {
     LOGGER.info("UserServiceImpl");
     this.pgPool = new PgPool(pgPool);
-    this.sqlAuth = SqlAuthentication.create(this.pgPool, new SqlAuthenticationOptions()) ;
+    this.sqlAuth = SqlAuthentication.create(this.pgPool, new SqlAuthenticationOptions(
+        new JsonObject().put("authenticationQuery", SQL_AUTHENTICATE_QUERY))) ;
 
     this.pgPool.rxGetConnection()
       .flatMap(pgConnection -> pgConnection
@@ -86,6 +87,25 @@ public class UserServiceImpl implements UserService {
             }
         );
 
+    return this;
+  }
+
+  @Override
+  public UserService authenticate(User user, Handler<AsyncResult<Void>> resultHandler) {
+    var json = new JsonObject()
+        .put("username", user.getUsername())
+        .put("password", user.getPassword());
+
+    sqlAuth.rxAuthenticate(json)
+        .subscribe(
+            result -> {
+              resultHandler.handle(Future.succeededFuture());
+            },
+            throwable -> {
+              LOGGER.error("Failed to get login", throwable);
+              resultHandler.handle(Future.failedFuture(throwable));
+            }
+        );
     return this;
   }
 

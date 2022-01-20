@@ -30,4 +30,7 @@ public interface UserService {
 
   @Fluent
   UserService findAll(Handler<AsyncResult<JsonArray>> resultHandler);
+
+  @Fluent
+  UserService authenticate(User user, Handler<AsyncResult<Void>> resultHandler);
 }

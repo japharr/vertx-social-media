@@ -35,4 +35,16 @@ public class UserApi {
           );
     };
   }
+
+  public static Handler<RoutingContext> authenticate(UserService userService) {
+    return ctx -> {
+      User user = decodeBodyToObject(ctx, User.class);
+
+      userService.rxAuthenticate(user)
+          .subscribe(
+              () -> restResponse(ctx, 200),
+              throwable -> ctx.fail(new BadRequestException(throwable))
+          );
+    };
+  }
 }

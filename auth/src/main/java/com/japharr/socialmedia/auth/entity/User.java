@@ -24,7 +24,7 @@ public class User {
   @JsonProperty("lastName")
   private String lastName;
 
-  private static final String USERNAME_REGEX_PATTERN = "^(?=.{8,20}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$";
+  private static final String USERNAME_REGEX_PATTERN = "^(?:[A-Z\\d][A-Z\\d_-]{8,20}|[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,4})$";
 
   public static final Validator<User> validator = ValidatorBuilder.<User>of()
       .constraint(User::getUsername, "username", c ->

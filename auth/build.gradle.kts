@@ -20,12 +20,13 @@ dependencies {
   implementation("io.vertx:vertx-rx-java3:$vertxVersion")
   implementation("io.vertx:vertx-service-proxy:$vertxVersion")
   implementation("io.vertx:vertx-rx-java3-gen:$vertxVersion")
-  implementation("am.ik.yavi:yavi:$yaviVersion")
+  implementation("io.vertx:vertx-auth-jwt:$vertxVersion")
 
   annotationProcessor("io.vertx:vertx-service-proxy:$vertxVersion")
   annotationProcessor("io.vertx:vertx-codegen:$vertxVersion:processor")
   annotationProcessor("io.vertx:vertx-rx-java3-gen:$vertxVersion")
 
+  implementation("am.ik.yavi:yavi:$yaviVersion")
   implementation("ch.qos.logback:logback-classic:$logbackClassicVersion")
   implementation("org.flywaydb:flyway-core:$flywayVersion")
   implementation("org.postgresql:postgresql:$postgresVersion")
@@ -43,7 +44,7 @@ val mainVerticleName = "com.japharr.socialmedia.auth.MainVerticle"
 val launcherClassName = "io.vertx.core.Launcher"
 
 application {
-  mainClass.set(launcherClassName)
+  mainClass.set(mainVerticleName)
 }
 
 tasks.named<Test>("test") {

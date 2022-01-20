@@ -24,11 +24,13 @@ public class User {
   @JsonProperty("lastName")
   private String lastName;
 
-  private static final String USERNAME_REGEX_PATTERN = "^(?:[A-Z\\d][A-Z\\d_-]{8,20}|[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,4})$";
+  // private static final String USERNAME_REGEX_PATTERN = "^(?:[A-Z\\d][A-Z\\d_-]{8,20}|[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,4})$";
+  // private static final String USERNAME_REGEX_PATTERN = "/^(?=[a-z0-9.]{3,20}$)[a-z0-9]+\\.?[a-z0-9]+$|^.*@\\w+\\.[\\w.]+$/i";
+  private static final String USERNAME_REGEX_PATTERN = "^(?=[a-zA-Z0-9._]{8,20}$)(?!.*[_.]{2})[^_.].*[^_.]$";
 
   public static final Validator<User> validator = ValidatorBuilder.<User>of()
       .constraint(User::getUsername, "username", c ->
-          c.notNull().pattern(USERNAME_REGEX_PATTERN).message("Username must be 8-20 character long"))
+          c.notNull().pattern(USERNAME_REGEX_PATTERN))
       .constraint(User::getPassword, "password", c -> c.notNull().greaterThanOrEqual(2).lessThanOrEqual(14))
       .constraint(User::getEmail, "email", c -> c.notNull().email())
       .build();

@@ -3,6 +3,7 @@ package com.japharr.socialmedia.auth.database.service.impl;
 import com.japharr.socialmedia.auth.database.service.UserDatabaseService;
 import com.japharr.socialmedia.auth.entity.User;
 import com.japharr.socialmedia.common.exception.BadRequestException;
+import com.japharr.socialmedia.common.exception.ResourceNotFoundException;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -27,6 +28,7 @@ public class UserDatabaseServiceImpl implements UserDatabaseService {
       "VALUES ($1, $2, $3, $4, $5, current_timestamp, current_timestamp)";
   private static final String SQL_SELECT_ALL = "SELECT * FROM users";
   private final static String SQL_AUTHENTICATE_QUERY = "SELECT password FROM users WHERE username = $1 OR email = $1";
+  private final static String SQL_SELECT_BY_USERNAME_EMAIL = "SELECT username, email, first_name, last_name FROM users WHERE username = $1 OR email = $1 LIMIT 1";
 
   private final PgPool pgPool;
   private final SqlAuthentication sqlAuth;
@@ -104,6 +106,35 @@ public class UserDatabaseServiceImpl implements UserDatabaseService {
             }
         );
     return this;
+  }
+
+  @Override
+  public UserDatabaseService findByUsernameOrEmail(String usernameOrEmail, Handler<AsyncResult<JsonObject>> resultHandler) {
+    pgPool.preparedQuery(SQL_SELECT_BY_USERNAME_EMAIL)
+        .rxExecute(Tuple.of(usernameOrEmail))
+        .subscribe(
+          result -> {
+            LOGGER.info("User found");
+            fetchOne(result, resultHandler);
+          },
+          throwable -> {
+            LOGGER.error("Failed to fetch user", throwable);
+            resultHandler.handle(Future.failedFuture(throwable));
+          }
+        );
+    return this;
+  }
+
+  private void fetchOne(RowSet<Row> rows, Handler<AsyncResult<JsonObject>> resultHandler) {
+    if(rows.size() == 0) {
+      resultHandler.handle(Future.failedFuture(new ResourceNotFoundException("User with name or email not found")));
+      return;
+    }
+
+    Row row = rows.iterator().next();
+    JsonObject user = mapToJsonObject(row);
+
+    resultHandler.handle(Future.succeededFuture(user));
   }
 
   private JsonObject mapToJsonObject(Row row) {

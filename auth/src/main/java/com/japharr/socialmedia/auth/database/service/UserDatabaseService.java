@@ -10,6 +10,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import io.vertx.pgclient.PgPool;
 
 @VertxGen
@@ -33,4 +34,7 @@ public interface UserDatabaseService {
 
   @Fluent
   UserDatabaseService authenticate(User user, Handler<AsyncResult<Void>> resultHandler);
+
+  @Fluent
+  UserDatabaseService findByUsernameOrEmail(String usernameOrEmail, Handler<AsyncResult<JsonObject>> resultHandler);
 }

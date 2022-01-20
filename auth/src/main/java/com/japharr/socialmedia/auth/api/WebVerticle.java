@@ -1,10 +1,9 @@
 package com.japharr.socialmedia.auth.api;
 
 import com.japharr.socialmedia.auth.api.handler.UserApi;
-import com.japharr.socialmedia.auth.database.service.UserService;
+import com.japharr.socialmedia.auth.database.service.UserDatabaseService;
 import com.japharr.socialmedia.common.handler.FailureHandler;
 import io.reactivex.rxjava3.core.Completable;
-import io.vertx.core.Promise;
 import io.vertx.rxjava3.core.AbstractVerticle;
 import io.vertx.rxjava3.ext.web.Router;
 import io.vertx.rxjava3.ext.web.handler.BodyHandler;
@@ -27,7 +26,7 @@ public class WebVerticle extends AbstractVerticle {
 
     var httpServer = vertx.createHttpServer();
 
-    var userService = UserService.createProxy(vertx.getDelegate(),
+    var userDatabaseService = UserDatabaseService.createProxy(vertx.getDelegate(),
       config().getJsonObject(EB_ADDRESSES).getString(EB_DB_USER_ADDRESS));
 
     var bodyHandler = BodyHandler.create();
@@ -37,9 +36,9 @@ public class WebVerticle extends AbstractVerticle {
     router.post().handler(bodyHandler);
     router.put().handler(bodyHandler);
 
-    router.post(REGISTER_NEW_USER).handler(UserApi.registerUser(userService));
-    router.post(AUTHENTICATE_USER).handler(UserApi.authenticate(userService));
-    router.get(GET_USERS).handler(UserApi.findAll(userService));
+    router.post(REGISTER_NEW_USER).handler(UserApi.registerUser(userDatabaseService));
+    router.post(AUTHENTICATE_USER).handler(UserApi.authenticate(userDatabaseService));
+    router.get(GET_USERS).handler(UserApi.findAll(userDatabaseService));
 
     router.route().failureHandler(new FailureHandler());
 

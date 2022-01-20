@@ -1,6 +1,6 @@
 package com.japharr.socialmedia.auth.api.handler;
 
-import com.japharr.socialmedia.auth.database.rxjava3.service.UserService;
+import com.japharr.socialmedia.auth.database.rxjava3.service.UserDatabaseService;
 import com.japharr.socialmedia.auth.entity.User;
 import com.japharr.socialmedia.common.exception.BadRequestException;
 import io.vertx.core.Handler;
@@ -14,11 +14,11 @@ import static com.japharr.socialmedia.common.util.RestApiUtil.restResponse;
 public class UserApi {
   private static final Logger LOGGER = LoggerFactory.getLogger(UserApi.class);
 
-  public static Handler<RoutingContext> registerUser(UserService userService) {
+  public static Handler<RoutingContext> registerUser(UserDatabaseService userDatabaseService) {
     return ctx -> {
       User user = decodeBodyToObject(ctx, User.class);
 
-      userService.register(user)
+      userDatabaseService.rxRegister(user)
         .subscribe(
           () -> restResponse(ctx, 200),
           throwable -> ctx.fail(new BadRequestException(throwable))
@@ -26,9 +26,9 @@ public class UserApi {
     };
   }
 
-  public static Handler<RoutingContext> findAll(UserService userService) {
+  public static Handler<RoutingContext> findAll(UserDatabaseService userDatabaseService) {
     return ctx -> {
-      userService.findAll()
+      userDatabaseService.rxFindAll()
           .subscribe(
               array -> restResponse(ctx, 200, array.encodePrettily()),
               throwable -> ctx.fail(new BadRequestException(throwable))
@@ -36,11 +36,11 @@ public class UserApi {
     };
   }
 
-  public static Handler<RoutingContext> authenticate(UserService userService) {
+  public static Handler<RoutingContext> authenticate(UserDatabaseService userDatabaseService) {
     return ctx -> {
       User user = decodeBodyToObject(ctx, User.class);
 
-      userService.rxAuthenticate(user)
+      userDatabaseService.rxAuthenticate(user)
           .subscribe(
               () -> restResponse(ctx, 200),
               throwable -> ctx.fail(new BadRequestException(throwable))

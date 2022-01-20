@@ -1,6 +1,6 @@
 package com.japharr.socialmedia.auth.database.service.impl;
 
-import com.japharr.socialmedia.auth.database.service.UserService;
+import com.japharr.socialmedia.auth.database.service.UserDatabaseService;
 import com.japharr.socialmedia.auth.entity.User;
 import com.japharr.socialmedia.common.exception.BadRequestException;
 import io.vertx.core.AsyncResult;
@@ -18,8 +18,8 @@ import io.vertx.rxjava3.sqlclient.Tuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class UserServiceImpl implements UserService {
-  private static final Logger LOGGER = LoggerFactory.getLogger(UserServiceImpl.class);
+public class UserDatabaseServiceImpl implements UserDatabaseService {
+  private static final Logger LOGGER = LoggerFactory.getLogger(UserDatabaseServiceImpl.class);
 
   private static final String SQL_COUNT_USERS = "SELECT COUNT(*) FROM users";
   private static final String INSERT_USER =
@@ -31,7 +31,7 @@ public class UserServiceImpl implements UserService {
   private final PgPool pgPool;
   private final SqlAuthentication sqlAuth;
 
-  public UserServiceImpl(io.vertx.pgclient.PgPool pgPool, Handler<AsyncResult<UserService>> resultHandler) {
+  public UserDatabaseServiceImpl(io.vertx.pgclient.PgPool pgPool, Handler<AsyncResult<UserDatabaseService>> resultHandler) {
     LOGGER.info("UserServiceImpl");
     this.pgPool = new PgPool(pgPool);
     this.sqlAuth = SqlAuthentication.create(this.pgPool, new SqlAuthenticationOptions(
@@ -52,7 +52,7 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public UserService register(User user, Handler<AsyncResult<Void>> resultHandler) {
+  public UserDatabaseService register(User user, Handler<AsyncResult<Void>> resultHandler) {
     String hash = sqlAuth.hash(
         "pbkdf2",
         VertxContextPRNG.current().nextString(32),
@@ -72,7 +72,7 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public UserService findAll(Handler<AsyncResult<JsonArray>> resultHandler) {
+  public UserDatabaseService findAll(Handler<AsyncResult<JsonArray>> resultHandler) {
     pgPool.preparedQuery(SQL_SELECT_ALL)
         .rxExecute()
         .subscribe(
@@ -90,7 +90,7 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public UserService authenticate(User user, Handler<AsyncResult<Void>> resultHandler) {
+  public UserDatabaseService authenticate(User user, Handler<AsyncResult<Void>> resultHandler) {
     var json = new JsonObject()
         .put("username", user.getUsername())
         .put("password", user.getPassword());

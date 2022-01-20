@@ -1,7 +1,7 @@
 package com.japharr.socialmedia.auth.database;
 
 import com.japharr.socialmedia.auth.config.PgConfig;
-import com.japharr.socialmedia.auth.database.service.UserService;
+import com.japharr.socialmedia.auth.database.service.UserDatabaseService;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -31,12 +31,12 @@ public class DatabaseVerticle extends AbstractVerticle {
 
     String databaseEbAddress = config().getJsonObject(EB_ADDRESSES).getString(EB_DB_USER_ADDRESS);
 
-    UserService.create(pgPool, result -> {
+    UserDatabaseService.create(pgPool, result -> {
       if(result.succeeded()) {
         LOGGER.info("succeeded");
         new ServiceBinder(vertx)
           .setAddress(databaseEbAddress)
-          .register(UserService.class, result.result())
+          .register(UserDatabaseService.class, result.result())
           .exceptionHandler(throwable -> {
             LOGGER.error("Failed to establish PostgreSQL database service", throwable);
             //startPromise.fail(throwable);

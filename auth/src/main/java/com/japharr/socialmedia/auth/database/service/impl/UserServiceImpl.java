@@ -28,8 +28,8 @@ public class UserServiceImpl implements UserService {
   private static final String SQL_SELECT_ALL = "SELECT * FROM users";
   private final static String SQL_AUTHENTICATE_QUERY = "SELECT password FROM users WHERE username = $1 OR email = $1";
 
-  private PgPool pgPool;
-  private SqlAuthentication sqlAuth;
+  private final PgPool pgPool;
+  private final SqlAuthentication sqlAuth;
 
   public UserServiceImpl(io.vertx.pgclient.PgPool pgPool, Handler<AsyncResult<UserService>> resultHandler) {
     LOGGER.info("UserServiceImpl");
@@ -54,18 +54,17 @@ public class UserServiceImpl implements UserService {
   @Override
   public UserService register(User user, Handler<AsyncResult<Void>> resultHandler) {
     String hash = sqlAuth.hash(
-        "pbkdf2", // hashing algorithm (OWASP recommended)
-        VertxContextPRNG.current().nextString(32), // secure random salt
-        user.getPassword() // password
+        "pbkdf2",
+        VertxContextPRNG.current().nextString(32),
+        user.getPassword()
     );
 
     pgPool.preparedQuery(INSERT_USER)
         .rxExecute(Tuple.of(user.getUsername(), hash, user.getEmail(), user.getFirstName(), user.getLastName()))
         .subscribe(
-            result -> {resultHandler.handle(Future.succeededFuture());},
+            result -> resultHandler.handle(Future.succeededFuture()),
             error -> {
               LOGGER.error("unable to create user", error);
-              //resultHandler.handle(Future.future(p -> p.fail(new BadRequestException(error))));
               resultHandler.handle(Future.failedFuture(new BadRequestException(error)));
             }
         );
@@ -98,9 +97,7 @@ public class UserServiceImpl implements UserService {
 
     sqlAuth.rxAuthenticate(json)
         .subscribe(
-            result -> {
-              resultHandler.handle(Future.succeededFuture());
-            },
+            result -> resultHandler.handle(Future.succeededFuture()),
             throwable -> {
               LOGGER.error("Failed to get login", throwable);
               resultHandler.handle(Future.failedFuture(throwable));
@@ -113,7 +110,8 @@ public class UserServiceImpl implements UserService {
     return new JsonObject()
         .put("username", row.getValue("username"))
         .put("email", row.getValue("email"))
-        .put("firstName", row.getValue("first_name"));
+        .put("firstName", row.getValue("first_name"))
+        .put("lastName", row.getValue("last_name"));
   }
 
   private JsonArray mapToJsonArray(RowSet<Row> rows) {

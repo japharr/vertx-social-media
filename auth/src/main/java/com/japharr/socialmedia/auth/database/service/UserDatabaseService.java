@@ -37,4 +37,7 @@ public interface UserDatabaseService {
 
   @Fluent
   UserDatabaseService findByUsernameOrEmail(String usernameOrEmail, Handler<AsyncResult<JsonObject>> resultHandler);
+
+  @Fluent
+  UserDatabaseService countByUsernameOrEmail(String usernameOrEmail, Handler<AsyncResult<Long>> resultHandler);
 }

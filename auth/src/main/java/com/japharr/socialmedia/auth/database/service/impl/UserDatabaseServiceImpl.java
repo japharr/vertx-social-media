@@ -3,6 +3,7 @@ package com.japharr.socialmedia.auth.database.service.impl;
 import com.japharr.socialmedia.auth.database.service.UserDatabaseService;
 import com.japharr.socialmedia.auth.entity.User;
 import com.japharr.socialmedia.common.exception.BadRequestException;
+import com.japharr.socialmedia.common.exception.ResourceAlreadyExistException;
 import com.japharr.socialmedia.common.exception.ResourceNotFoundException;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -29,6 +30,7 @@ public class UserDatabaseServiceImpl implements UserDatabaseService {
   private static final String SQL_SELECT_ALL = "SELECT * FROM users";
   private final static String SQL_AUTHENTICATE_QUERY = "SELECT password FROM users WHERE username = $1 OR email = $1";
   private final static String SQL_SELECT_BY_USERNAME_EMAIL = "SELECT username, email, first_name, last_name FROM users WHERE username = $1 OR email = $1 LIMIT 1";
+  private final static String SQL_COUNT_BY_USERNAME_EMAIL = "SELECT COUNT(*) FROM users WHERE username = $1 OR email = $1 LIMIT 1";
 
   private final PgPool pgPool;
   private final SqlAuthentication sqlAuth;
@@ -116,6 +118,24 @@ public class UserDatabaseServiceImpl implements UserDatabaseService {
           result -> {
             LOGGER.info("User found");
             fetchOne(result, resultHandler);
+          },
+          throwable -> {
+            LOGGER.error("Failed to fetch user", throwable);
+            resultHandler.handle(Future.failedFuture(throwable));
+          }
+        );
+    return this;
+  }
+
+  @Override
+  public UserDatabaseService countByUsernameOrEmail(String usernameOrEmail, Handler<AsyncResult<Long>> resultHandler) {
+    pgPool.preparedQuery(SQL_COUNT_BY_USERNAME_EMAIL)
+        .rxExecute(Tuple.of(usernameOrEmail))
+        .subscribe(
+          result -> {
+            LOGGER.info("User found");
+            var count = result.iterator().next().getLong(0);
+            resultHandler.handle(Future.succeededFuture(count));
           },
           throwable -> {
             LOGGER.error("Failed to fetch user", throwable);

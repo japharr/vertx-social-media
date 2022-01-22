@@ -3,7 +3,10 @@ package com.japharr.socialmedia.auth.api.handler;
 import com.japharr.socialmedia.auth.database.rxjava3.service.UserDatabaseService;
 import com.japharr.socialmedia.auth.entity.User;
 import com.japharr.socialmedia.common.exception.BadRequestException;
+import com.japharr.socialmedia.common.ext.Pair;
+import io.reactivex.rxjava3.core.Single;
 import io.vertx.core.Handler;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.JWTOptions;
 import io.vertx.rxjava3.ext.auth.jwt.JWTAuth;
@@ -27,6 +30,34 @@ public class UserApi {
           throwable -> ctx.fail(new BadRequestException(throwable))
         );
     };
+  }
+
+  public static Handler<RoutingContext> validateRegisterUser(UserDatabaseService userDatabaseService) {
+    return ctx -> {
+      User user = decodeBodyToObject(ctx, User.class);
+
+      var result = Single.zip(
+          userDatabaseService.rxCountByUsernameOrEmail(user.getUsername()),
+          userDatabaseService.rxCountByUsernameOrEmail(user.getEmail()),
+          Pair::of
+      ).subscribe(
+          res -> {
+            JsonArray array = new JsonArray();
+            if(res.x() > 0) array.add(constructError("Username already in use"));
+            if(res.y() > 0) array.add(constructError("Email already in use"));
+
+            if(!array.isEmpty()) {
+              restResponse(ctx, 400, array.encodePrettily());
+            } else {
+              ctx.next();
+            }
+          }
+      );
+    };
+  }
+
+  public static JsonObject constructError(String message) {
+    return new JsonObject().put("message", message);
   }
 
   public static Handler<RoutingContext> findAll(UserDatabaseService userDatabaseService) {

@@ -63,6 +63,7 @@ public class WebVerticle extends AbstractVerticle {
 
     router.post(REGISTER_NEW_USER)
         .handler(HttpRequestValidator.validateUser())
+        .handler(UserApi.validateRegisterUser(userDatabaseService))
         .handler(UserApi.registerUser(userDatabaseService));
 
     router.post(AUTHENTICATE_USER).handler(UserApi.authenticate(userDatabaseService));

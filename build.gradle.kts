@@ -5,7 +5,7 @@ plugins {
 }
 
 allprojects {
-  extra["vertxVersion"] = "4.2.3"
+  extra["vertxVersion"] = "4.2.4"
   extra["jupiterVersion"] = "5.8.2"
   extra["flywayVersion"] = "8.4.1"
   extra["postgresVersion"] = "42.3.1"

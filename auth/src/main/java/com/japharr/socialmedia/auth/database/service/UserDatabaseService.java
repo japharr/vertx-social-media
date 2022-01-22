@@ -33,7 +33,7 @@ public interface UserDatabaseService {
   UserDatabaseService findAll(Handler<AsyncResult<JsonArray>> resultHandler);
 
   @Fluent
-  UserDatabaseService authenticate(User user, Handler<AsyncResult<Void>> resultHandler);
+  UserDatabaseService authenticate(String usernameOrEmail, String password, Handler<AsyncResult<Void>> resultHandler);
 
   @Fluent
   UserDatabaseService findByUsernameOrEmail(String usernameOrEmail, Handler<AsyncResult<JsonObject>> resultHandler);

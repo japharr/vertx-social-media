@@ -2,6 +2,7 @@ package com.japharr.socialmedia.auth.api.handler;
 
 import com.japharr.socialmedia.auth.database.rxjava3.service.UserDatabaseService;
 import com.japharr.socialmedia.auth.entity.User;
+import com.japharr.socialmedia.auth.model.Login;
 import com.japharr.socialmedia.common.exception.BadRequestException;
 import com.japharr.socialmedia.common.ext.Pair;
 import io.reactivex.rxjava3.core.Single;
@@ -14,6 +15,8 @@ import io.vertx.rxjava3.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.japharr.socialmedia.common.ext.HttpCode.HTTP_BAD_REQUEST;
+import static com.japharr.socialmedia.common.ext.HttpCode.HTTP_OK;
 import static com.japharr.socialmedia.common.util.RestApiUtil.decodeBodyToObject;
 import static com.japharr.socialmedia.common.util.RestApiUtil.restResponse;
 
@@ -26,7 +29,7 @@ public class UserApi {
 
       userDatabaseService.rxRegister(user)
         .subscribe(
-          () -> restResponse(ctx, 200),
+          () -> restResponse(ctx, HTTP_OK),
           throwable -> ctx.fail(new BadRequestException(throwable))
         );
     };
@@ -47,7 +50,7 @@ public class UserApi {
             if(res.y() > 0) array.add(constructError("Email already in use"));
 
             if(!array.isEmpty()) {
-              restResponse(ctx, 400, array.encodePrettily());
+              restResponse(ctx, HTTP_BAD_REQUEST, array.encodePrettily());
             } else {
               ctx.next();
             }
@@ -64,7 +67,7 @@ public class UserApi {
     return ctx -> {
       userDatabaseService.rxFindAll()
           .subscribe(
-              array -> restResponse(ctx, 200, array.encodePrettily()),
+              array -> restResponse(ctx, HTTP_OK, array.encodePrettily()),
               throwable -> ctx.fail(new BadRequestException(throwable))
           );
     };
@@ -72,11 +75,11 @@ public class UserApi {
 
   public static Handler<RoutingContext> authenticate(UserDatabaseService userDatabaseService) {
     return ctx -> {
-      User user = decodeBodyToObject(ctx, User.class);
+      Login login = decodeBodyToObject(ctx, Login.class);
 
-      userDatabaseService.rxAuthenticate(user)
+      userDatabaseService.rxAuthenticate(login.username(), login.password())
           .subscribe(
-              () -> restResponse(ctx, 200),
+              () -> restResponse(ctx, HTTP_OK),
               throwable -> ctx.fail(new BadRequestException(throwable))
           );
     };
@@ -84,13 +87,13 @@ public class UserApi {
 
   public static Handler<RoutingContext> token(UserDatabaseService userDatabaseService, JWTAuth jwtAuth) {
     return ctx -> {
-      User user = decodeBodyToObject(ctx, User.class);
+      var login = decodeBodyToObject(ctx, Login.class);
 
-      userDatabaseService.rxAuthenticate(user)
-          .andThen(userDatabaseService.rxFindByUsernameOrEmail(user.getUsername()))
-          .map(json -> makeJwtToken(user.getUsername(), json, jwtAuth))
+      userDatabaseService.rxAuthenticate(login.username(), login.password())
+          .andThen(userDatabaseService.rxFindByUsernameOrEmail(login.username()))
+          .map(json -> makeJwtToken(login.username(), json, jwtAuth))
           .subscribe(
-              token -> restResponse(ctx, 200, token),
+              token -> restResponse(ctx, HTTP_OK, token),
               throwable -> ctx.fail(new BadRequestException(throwable))
           );
     };

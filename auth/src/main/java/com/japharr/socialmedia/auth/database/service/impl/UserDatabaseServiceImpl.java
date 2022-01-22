@@ -94,10 +94,10 @@ public class UserDatabaseServiceImpl implements UserDatabaseService {
   }
 
   @Override
-  public UserDatabaseService authenticate(User user, Handler<AsyncResult<Void>> resultHandler) {
+  public UserDatabaseService authenticate(String usernameOrEmail, String password, Handler<AsyncResult<Void>> resultHandler) {
     var json = new JsonObject()
-        .put("username", user.getUsername())
-        .put("password", user.getPassword());
+        .put("username", usernameOrEmail)
+        .put("password", password);
 
     sqlAuth.rxAuthenticate(json)
         .subscribe(

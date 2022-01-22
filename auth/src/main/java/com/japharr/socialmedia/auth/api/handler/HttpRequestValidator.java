@@ -26,11 +26,21 @@ public class HttpRequestValidator {
         return;
       }
 
-      JsonArray array = new JsonArray();
-      violations.forEach(r -> {
-        array.add(new JsonObject().put(r.messageKey(), r.message()));
-      });
-      restResponse(ctx, 400, array.encodePrettily());
+      restResponse(ctx, 400, constructViolations(violations).encodePrettily());
     };
+  }
+
+  private static JsonArray constructViolations(ConstraintViolations violations) {
+    JsonArray array = new JsonArray();
+    violations.forEach(r -> {
+      array.add(new JsonObject()
+          .put("message", r.message())
+          .put("messageKey", r.messageKey())
+          .put("name", r.name())
+          .put("value", r.violatedValue())
+      );
+    });
+
+    return array;
   }
 }

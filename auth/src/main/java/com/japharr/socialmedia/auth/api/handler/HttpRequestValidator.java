@@ -1,46 +1,51 @@
 package com.japharr.socialmedia.auth.api.handler;
 
-import am.ik.yavi.core.ConstraintViolations;
 import com.japharr.socialmedia.auth.entity.User;
+import com.japharr.socialmedia.auth.model.Login;
 import io.vertx.core.Handler;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava3.ext.web.RoutingContext;
 
 import static com.japharr.socialmedia.common.util.RestApiUtil.decodeBodyToObject;
 import static com.japharr.socialmedia.common.util.RestApiUtil.restResponse;
+import static com.japharr.socialmedia.common.util.ValidationUtils.extract;
 
 public class HttpRequestValidator {
   public static Handler<RoutingContext> validateUser() {
     return ctx -> {
       var user = decodeBodyToObject(ctx, User.class);
 
-      if(user == null) {
+      if (user == null) {
         ctx.fail(400);
         return;
       }
 
       var violations = User.validator.validate(user);
-      if(violations.isValid()) {
+      if (violations.isValid()) {
         ctx.next();
         return;
       }
 
-      restResponse(ctx, 400, constructViolations(violations).encodePrettily());
+      restResponse(ctx, 400, extract(violations).encodePrettily());
     };
   }
 
-  private static JsonArray constructViolations(ConstraintViolations violations) {
-    JsonArray array = new JsonArray();
-    violations.forEach(r -> {
-      array.add(new JsonObject()
-          .put("message", r.message())
-          .put("messageKey", r.messageKey())
-          .put("name", r.name())
-          .put("value", r.violatedValue())
-      );
-    });
+  public static Handler<RoutingContext> validateLogin() {
+    return ctx -> {
+      var login = decodeBodyToObject(ctx, Login.class);
 
-    return array;
+      if (login == null) {
+        ctx.fail(400);
+        return;
+      }
+
+      var violations = Login.validator.validate(login);
+      if (violations.isValid()) {
+        ctx.next();
+        return;
+      }
+
+      restResponse(ctx, 400, extract(violations).encodePrettily());
+    };
   }
+
 }

@@ -1,5 +1,6 @@
 package com.japharr.socialmedia.auth.api.handler;
 
+import am.ik.yavi.core.ConstraintViolations;
 import com.japharr.socialmedia.auth.entity.User;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;

@@ -1,10 +1,8 @@
-package com.japharr.socialmedia.auth.config;
+package com.japharr.socialmedia.common.config;
 
 import io.vertx.core.json.JsonObject;
 import io.vertx.pgclient.PgConnectOptions;
 import io.vertx.sqlclient.PoolOptions;
-
-import java.text.MessageFormat;
 
 public abstract class PgConfig {
   public static final String DB = "db";

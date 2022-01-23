@@ -11,7 +11,7 @@ import io.vertx.core.json.JsonObject;
 import java.util.Objects;
 
 @DataObject(generateConverter = true)
-@JsonPropertyOrder({"username", "password", "email", "firstName", "lastName"})
+@JsonPropertyOrder({"username", "password", "email", "name", "emailVerify"})
 public class User {
   @JsonProperty("username")
   private String username;
@@ -19,10 +19,10 @@ public class User {
   private String password;
   @JsonProperty("email")
   private String email;
-  @JsonProperty("firstName")
-  private String firstName;
-  @JsonProperty("lastName")
-  private String lastName;
+  @JsonProperty("name")
+  private String name;
+  @JsonProperty("emailVerify")
+  private boolean emailVerify;
 
   // private static final String USERNAME_REGEX_PATTERN = "^(?:[A-Z\\d][A-Z\\d_-]{8,20}|[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,4})$";
   // private static final String USERNAME_REGEX_PATTERN = "/^(?=[a-z0-9.]{3,20}$)[a-z0-9]+\\.?[a-z0-9]+$|^.*@\\w+\\.[\\w.]+$/i";
@@ -30,9 +30,9 @@ public class User {
 
   public static final Validator<User> validator = ValidatorBuilder.<User>of()
       .constraint(User::getUsername, "username", c ->
-          c.notNull().pattern(USERNAME_REGEX_PATTERN))
-      .constraint(User::getPassword, "password", c -> c.notNull().greaterThanOrEqual(2).lessThanOrEqual(14))
-      .constraint(User::getEmail, "email", c -> c.notNull().email())
+          c.notNull().notBlank().pattern(USERNAME_REGEX_PATTERN))
+      .constraint(User::getPassword, "password", c -> c.notNull().notBlank().greaterThanOrEqual(2).lessThanOrEqual(14))
+      .constraint(User::getEmail, "email", c -> c.notNull().notBlank().email())
       .build();
 
   public User () {}
@@ -41,8 +41,8 @@ public class User {
     this.username = other.username;
     this.password = other.password;
     this.email = other.email;
-    this.firstName = other.firstName;
-    this.lastName = other.lastName;
+    this.name = other.name;
+    this.emailVerify = other.emailVerify;
   }
 
   public User(String json) {
@@ -59,12 +59,12 @@ public class User {
     return jsonObject;
   }
 
-  public User(String username, String password, String email, String firstName, String lastName) {
+  public User(String username, String password, String email, String name, boolean emailVerify) {
     this.username = username;
     this.password = password;
     this.email = email;
-    this.firstName = firstName;
-    this.lastName = lastName;
+    this.name = name;
+    this.emailVerify = emailVerify;
   }
 
   public String getUsername() {
@@ -91,20 +91,20 @@ public class User {
     this.email = email;
   }
 
-  public String getFirstName() {
-    return firstName;
+  public String getName() {
+    return name;
   }
 
-  public void setFirstName(String firstName) {
-    this.firstName = firstName;
+  public void setName(String name) {
+    this.name = name;
   }
 
-  public String getLastName() {
-    return lastName;
+  public boolean getEmailVerify() {
+    return emailVerify;
   }
 
-  public void setLastName(String lastName) {
-    this.lastName = lastName;
+  public void setEmailVerify(boolean emailVerify) {
+    this.emailVerify = emailVerify;
   }
 
   @Override
@@ -124,10 +124,9 @@ public class User {
   public String toString() {
     return "{\n" +
         "\"username\": \"" + username + "\",\n" +
-        "\"password\": \"" + password + "\",\n" +
         "\"email\": \"" + email + "\",\n" +
-        "\"firstName\": \"" + firstName +"\",\n" +
-        "\"lastName\": \"" + lastName + "\",\n" +
+        "\"name\": \"" + name +"\",\n" +
+        "\"emailVerify\": \"" + emailVerify + "\",\n" +
         "}";
   }
 }

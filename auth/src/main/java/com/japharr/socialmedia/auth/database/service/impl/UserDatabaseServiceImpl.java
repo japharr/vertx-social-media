@@ -2,6 +2,7 @@ package com.japharr.socialmedia.auth.database.service.impl;
 
 import com.japharr.socialmedia.auth.database.service.UserDatabaseService;
 import com.japharr.socialmedia.auth.entity.User;
+import com.japharr.socialmedia.auth.rxjava3.config.CustomSqlAuthentication;
 import com.japharr.socialmedia.common.exception.BadRequestException;
 import com.japharr.socialmedia.common.exception.ResourceAlreadyExistException;
 import com.japharr.socialmedia.common.exception.ResourceNotFoundException;
@@ -20,16 +21,18 @@ import io.vertx.rxjava3.sqlclient.Tuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.UUID;
+
 public class UserDatabaseServiceImpl implements UserDatabaseService {
   private static final Logger LOGGER = LoggerFactory.getLogger(UserDatabaseServiceImpl.class);
 
   private static final String SQL_COUNT_USERS = "SELECT COUNT(*) FROM users";
   private static final String INSERT_USER =
-      "INSERT INTO users (username, password, email, first_name, last_name, created_date, last_modified_date) " +
-      "VALUES ($1, $2, $3, $4, $5, current_timestamp, current_timestamp)";
+      "INSERT INTO users (userid, username, password, email, name, email_verify, created_date, last_modified_date) " +
+      "VALUES ($1, $2, $3, $4, $5, $6, current_timestamp, current_timestamp)";
   private static final String SQL_SELECT_ALL = "SELECT * FROM users";
-  private final static String SQL_AUTHENTICATE_QUERY = "SELECT password FROM users WHERE username = $1 OR email = $1";
-  private final static String SQL_SELECT_BY_USERNAME_EMAIL = "SELECT username, email, first_name, last_name FROM users WHERE username = $1 OR email = $1 LIMIT 1";
+  private final static String SQL_AUTHENTICATE_QUERY = "SELECT password, email, email_verify FROM users WHERE username = $1 OR email = $1";
+  private final static String SQL_SELECT_BY_USERNAME_EMAIL = "SELECT userid, username, email, name, email_verify FROM users WHERE username = $1 OR email = $1 LIMIT 1";
   private final static String SQL_COUNT_BY_USERNAME_EMAIL = "SELECT COUNT(*) FROM users WHERE username = $1 OR email = $1 LIMIT 1";
 
   private final PgPool pgPool;
@@ -38,7 +41,7 @@ public class UserDatabaseServiceImpl implements UserDatabaseService {
   public UserDatabaseServiceImpl(io.vertx.pgclient.PgPool pgPool, Handler<AsyncResult<UserDatabaseService>> resultHandler) {
     LOGGER.info("UserServiceImpl");
     this.pgPool = new PgPool(pgPool);
-    this.sqlAuth = SqlAuthentication.create(this.pgPool, new SqlAuthenticationOptions(
+    this.sqlAuth = CustomSqlAuthentication.create(this.pgPool, new SqlAuthenticationOptions(
         new JsonObject().put("authenticationQuery", SQL_AUTHENTICATE_QUERY))) ;
 
     this.pgPool.rxGetConnection()
@@ -64,7 +67,7 @@ public class UserDatabaseServiceImpl implements UserDatabaseService {
     );
 
     pgPool.preparedQuery(INSERT_USER)
-        .rxExecute(Tuple.of(user.getUsername(), hash, user.getEmail(), user.getFirstName(), user.getLastName()))
+        .rxExecute(Tuple.of(UUID.randomUUID().toString(), user.getUsername(), hash, user.getEmail(), user.getName(), false))
         .subscribe(
             result -> resultHandler.handle(Future.succeededFuture()),
             error -> {
@@ -159,10 +162,11 @@ public class UserDatabaseServiceImpl implements UserDatabaseService {
 
   private JsonObject mapToJsonObject(Row row) {
     return new JsonObject()
+        .put("userid", row.getValue("userid"))
         .put("username", row.getValue("username"))
         .put("email", row.getValue("email"))
-        .put("firstName", row.getValue("first_name"))
-        .put("lastName", row.getValue("last_name"));
+        .put("name", row.getValue("name"))
+        .put("emailVerify", row.getValue("email_verify"));
   }
 
   private JsonArray mapToJsonArray(RowSet<Row> rows) {

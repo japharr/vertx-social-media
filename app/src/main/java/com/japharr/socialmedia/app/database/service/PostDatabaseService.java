@@ -8,6 +8,7 @@ import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.codegen.annotations.VertxGen;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.pgclient.PgPool;
 
@@ -17,6 +18,11 @@ public interface PostDatabaseService {
   @GenIgnore
   static PostDatabaseService create(PgPool pgPool, Handler<AsyncResult<PostDatabaseService>> resultHandler) {
     return new PostDatabaseServiceImpl(pgPool, resultHandler);
+  }
+
+  @GenIgnore
+  static com.japharr.socialmedia.app.database.rxjava3.service.PostDatabaseService createProxy(Vertx vertx, String address) {
+    return new com.japharr.socialmedia.app.database.rxjava3.service.PostDatabaseService(new PostDatabaseServiceVertxEBProxy(vertx, address));
   }
 
   @Fluent

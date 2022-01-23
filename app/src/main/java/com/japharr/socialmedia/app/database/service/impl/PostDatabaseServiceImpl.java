@@ -26,7 +26,7 @@ public class PostDatabaseServiceImpl implements PostDatabaseService {
   private static final String SQL_COUNT_POSTS = "SELECT COUNT(*) FROM posts";
   private static final String SQL_INSERT_POST =
       "INSERT INTO posts (post_id, text, userid, created_date, last_modified_date) " +
-          "VALUES ($1, $2, current_timestamp, current_timestamp)";
+          "VALUES ($1, $2, $3, current_timestamp, current_timestamp)";
   private static final String SQL_SELECT_ALL = "SELECT * FROM posts";
 
   private final PgPool pgPool;

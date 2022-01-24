@@ -5,6 +5,10 @@ import com.japharr.socialmedia.auth.api.handler.UserApi;
 import com.japharr.socialmedia.auth.database.service.UserDatabaseService;
 import com.japharr.socialmedia.common.handler.FailureHandler;
 import io.reactivex.rxjava3.core.Completable;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.PubSecKeyOptions;
 import io.vertx.ext.auth.jwt.JWTAuthOptions;
 import io.vertx.rxjava3.core.AbstractVerticle;
@@ -12,6 +16,9 @@ import io.vertx.rxjava3.ext.auth.jwt.JWTAuth;
 import io.vertx.rxjava3.ext.web.Router;
 import io.vertx.rxjava3.ext.web.handler.BodyHandler;
 import io.vertx.rxjava3.ext.web.handler.JWTAuthHandler;
+import io.vertx.rxjava3.servicediscovery.ServiceDiscovery;
+import io.vertx.servicediscovery.types.EventBusService;
+import io.vertx.servicediscovery.types.HttpEndpoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,6 +36,8 @@ public class WebVerticle extends AbstractVerticle {
   private static final String ENV_PUBLIC_KEY = "PUBLIC_KEY";
   private static final String JWT_ALGORITHM = "RS256";
 
+  private ServiceDiscovery discovery;
+
   @Override
   public Completable rxStart() {
     LOGGER.info("deploying webVerticle");
@@ -40,7 +49,7 @@ public class WebVerticle extends AbstractVerticle {
       return Completable.error(new Exception("No public or private key set in env"));
     }
 
-    var httpServer = vertx.createHttpServer();
+    discovery = ServiceDiscovery.create(vertx);
 
     var jwtAuth = JWTAuth.create(vertx, new JWTAuthOptions()
         .addPubSecKey(new PubSecKeyOptions()
@@ -52,6 +61,18 @@ public class WebVerticle extends AbstractVerticle {
 
     var userDatabaseService = UserDatabaseService.createProxy(vertx.getDelegate(),
       config().getJsonObject(EB_ADDRESSES).getString(EB_DB_USER_ADDRESS));
+
+    getWebClient(res -> {
+      startServer(res.result(), jwtAuth);
+    });
+
+
+
+    return Completable.complete();
+  }
+
+  private void startServer(com.japharr.socialmedia.auth.database.rxjava3.service.UserDatabaseService userDatabaseService, JWTAuth jwtAuth) {
+    var httpServer = vertx.createHttpServer();
 
     var bodyHandler = BodyHandler.create();
     var jwtHandler = JWTAuthHandler.create(jwtAuth);
@@ -79,13 +100,15 @@ public class WebVerticle extends AbstractVerticle {
     int httpServerPort = config().getJsonObject(HTTP_KEY).getInteger(PORT_KEY);
 
     httpServer
-      .requestHandler(router)
-      .rxListen(httpServerPort)
-      .subscribe(
-        rx -> LOGGER.info("success: {}", rx.actualPort()),
-        error -> LOGGER.error("error", error)
-      );
+        .requestHandler(router)
+        .rxListen(httpServerPort)
+        .subscribe(
+            rx -> LOGGER.info("success: {}", rx.actualPort()),
+            error -> LOGGER.error("error", error)
+        );
+  }
 
-    return Completable.complete();
+  private void getWebClient(Handler<AsyncResult<com.japharr.socialmedia.auth.database.rxjava3.service.UserDatabaseService>> resultHandler) {
+    EventBusService.getServiceProxyWithJsonFilter(discovery.getDelegate(), new JsonObject(), com.japharr.socialmedia.auth.database.rxjava3.service.UserDatabaseService.class, resultHandler);
   }
 }

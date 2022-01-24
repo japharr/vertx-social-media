@@ -17,6 +17,7 @@ dependencies {
   implementation("io.vertx:vertx-rx-java3:$vertxVersion")
   implementation("io.vertx:vertx-service-proxy:$vertxVersion")
   implementation("io.vertx:vertx-rx-java3-gen:$vertxVersion")
+  implementation("io.vertx:vertx-service-discovery:$vertxVersion")
 
   annotationProcessor("io.vertx:vertx-service-proxy:$vertxVersion")
   annotationProcessor("io.vertx:vertx-codegen:$vertxVersion:processor")

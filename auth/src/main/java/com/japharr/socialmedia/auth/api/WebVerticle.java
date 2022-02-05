@@ -16,7 +16,7 @@ import io.vertx.rxjava3.ext.auth.jwt.JWTAuth;
 import io.vertx.rxjava3.ext.web.Router;
 import io.vertx.rxjava3.ext.web.handler.BodyHandler;
 import io.vertx.rxjava3.ext.web.handler.JWTAuthHandler;
-import io.vertx.rxjava3.servicediscovery.ServiceDiscovery;
+import io.vertx.servicediscovery.ServiceDiscovery;
 import io.vertx.servicediscovery.types.EventBusService;
 import io.vertx.servicediscovery.types.HttpEndpoint;
 import org.slf4j.Logger;
@@ -49,7 +49,7 @@ public class WebVerticle extends AbstractVerticle {
       return Completable.error(new Exception("No public or private key set in env"));
     }
 
-    discovery = ServiceDiscovery.create(vertx);
+    discovery = ServiceDiscovery.create(vertx.getDelegate());
 
     var jwtAuth = JWTAuth.create(vertx, new JWTAuthOptions()
         .addPubSecKey(new PubSecKeyOptions()
@@ -109,6 +109,6 @@ public class WebVerticle extends AbstractVerticle {
   }
 
   private void getWebClient(Handler<AsyncResult<com.japharr.socialmedia.auth.database.rxjava3.service.UserDatabaseService>> resultHandler) {
-    EventBusService.getServiceProxyWithJsonFilter(discovery.getDelegate(), new JsonObject(), com.japharr.socialmedia.auth.database.rxjava3.service.UserDatabaseService.class, resultHandler);
+    EventBusService.getServiceProxyWithJsonFilter(discovery, new JsonObject(), com.japharr.socialmedia.auth.database.rxjava3.service.UserDatabaseService.class, resultHandler);
   }
 }

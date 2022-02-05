@@ -38,6 +38,7 @@ public class MainVerticle extends AbstractVerticle {
 
     return vertx.deployVerticle(new MigrationVerticle(), deploymentOptions)
       .flatMap(id -> vertx.deployVerticle(new DatabaseVerticle(), deploymentOptions))
+        .doOnError(error -> {LOGGER.error("ERROR", error);})
       .flatMap(id -> vertx.deployVerticle(new WebVerticle(), deploymentOptions));
   }
 

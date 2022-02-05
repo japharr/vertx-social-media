@@ -9,13 +9,13 @@ CREATE TABLE posts (
  last_modified_date TIMESTAMP
 );
 
-CREATE TABLE users {
+CREATE TABLE users (
  userid VARCHAR(255) NOT NULL,
  name VARCHAR(100) NOT NULL,
  image_url  VARCHAR(300),
  created_date TIMESTAMP,
  last_modified_date TIMESTAMP
-}
+);
 
 ALTER TABLE posts ADD CONSTRAINT pk_posts PRIMARY KEY (post_id);
 ALTER TABLE users ADD CONSTRAINT pk_users PRIMARY KEY (userid);

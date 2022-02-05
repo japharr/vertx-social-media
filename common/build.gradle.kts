@@ -12,6 +12,8 @@ dependencies {
   implementation("io.vertx:vertx-config-yaml:$vertxVersion")
   implementation("io.vertx:vertx-rx-java3:$vertxVersion")
   implementation("io.vertx:vertx-pg-client:$vertxVersion")
+  implementation("io.vertx:vertx-service-discovery:$vertxVersion")
+  implementation("io.vertx:vertx-service-proxy:$vertxVersion")
 
   implementation("am.ik.yavi:yavi:$yaviVersion")
   implementation("ch.qos.logback:logback-classic:$logbackClassicVersion")

@@ -1,7 +1,19 @@
 http:
   port: 8081
 
+eb.addresses:
+  db.post: eb.db.post
+  db.user: eb.db.user
+
+proxy.service:
+  db.post: service.db.post
+  db.user: service.db.user
+
 db:
-  url: jdbc:postgresql://127.0.0.1:5432/social_media
+  host: 127.0.0.1
+  port: 5432
+  database: social_media_app
   user: devuser
   password: pass123
+  pool:
+    max-size: 5

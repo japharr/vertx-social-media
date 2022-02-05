@@ -1,61 +1,50 @@
 package com.japharr.socialmedia.app.database;
 
 import com.japharr.socialmedia.app.database.service.PostDatabaseService;
+import com.japharr.socialmedia.app.database.service.UserDatabaseService;
 import com.japharr.socialmedia.common.BaseDatabaseVerticle;
-import io.vertx.core.Future;
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.Promise;
-import io.vertx.servicediscovery.types.EventBusService;
-import io.vertx.servicediscovery.Record;
-import io.vertx.servicediscovery.ServiceDiscovery;
-import io.vertx.servicediscovery.ServiceDiscoveryOptions;
-import io.vertx.servicediscovery.impl.DiscoveryImpl;
-import io.vertx.serviceproxy.ServiceBinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 public class DatabaseVerticle extends BaseDatabaseVerticle {
   private static final Logger LOGGER = LoggerFactory.getLogger(BaseDatabaseVerticle.class);
   private static final String EB_ADDRESSES = "eb.addresses";
   private static final String EB_DB_POST_ADDRESS = "db.post";
-  private static final String POST_DATABASE_SERVICE_NAME = "post_db_service";
+  private static final String EB_DB_USER_ADDRESS = "db.user";
 
-  private ServiceDiscovery discovery;
-  private Record postDatabaseServiceRecord;
+  private static final String PROXY_SERVICES = "proxy.service";
+  private static final String PS_DB_POST_NAME = "db.post";
+  private static final String PS_DB_USER_NAME = "db.user";
 
   @Override
-  protected void createProxyServices(Promise<Void> startPromise) {
-    discovery = new DiscoveryImpl(vertx, new ServiceDiscoveryOptions());
+  public void start(Promise<Void> startPromise) throws Exception {
+    LOGGER.info("deploying DatabaseVerticle, {}", config());
+    super.start(startPromise);
 
-    String databaseEbAddress = config().getJsonObject(EB_ADDRESSES).getString(EB_DB_POST_ADDRESS);
+    String ebDbPostAddress = config().getJsonObject(EB_ADDRESSES).getString(EB_DB_POST_ADDRESS);
+    String ebDbUserAddress = config().getJsonObject(EB_ADDRESSES).getString(EB_DB_USER_ADDRESS);
 
-    PostDatabaseService.create(pgPool, result -> {
-      if(result.succeeded()) {
-        LOGGER.info("succeeded");
-        new ServiceBinder(vertx)
-            .setAddress(databaseEbAddress)
-            .register(PostDatabaseService.class, result.result())
-            .exceptionHandler(throwable -> {
-              LOGGER.error("Failed to establish PostgreSQL database service", throwable);
-              startPromise.fail(throwable);
-            })
-            .completionHandler(res -> {
-              LOGGER.info("PostgreSQL database service is successfully established in \"" + databaseEbAddress + "\"");
+    String servicePostName = config().getJsonObject(PROXY_SERVICES).getString(PS_DB_POST_NAME);
+    String serviceUserName = config().getJsonObject(PROXY_SERVICES).getString(PS_DB_USER_NAME);
 
-              postDatabaseServiceRecord = EventBusService.createRecord(
-                  POST_DATABASE_SERVICE_NAME, // The service name
-                  databaseEbAddress, // the service address,
-                  PostDatabaseService.class // the service interface
-              );
+    Promise<Void> userDbServicePromise = Promise.promise();
+    Promise<Void> postDbServicePromise = Promise.promise();
 
-              discovery.publish(postDatabaseServiceRecord);
+    UserDatabaseService.create(pgPool, bindAndPublish(ebDbPostAddress, serviceUserName, userDbServicePromise, UserDatabaseService.class));
+    PostDatabaseService.create(pgPool, bindAndPublish(ebDbUserAddress, servicePostName, postDbServicePromise, PostDatabaseService.class));
 
-              startPromise.complete();
-            });
-      } else {
-        LOGGER.error("Failed to initiate the connection to database", result.cause());
-        //startPromise.fail(result.cause());
-        Future.future(p -> startPromise.fail(result.cause()));
-      }
-    });
+    CompositeFuture.all(userDbServicePromise.future(), postDbServicePromise.future())
+        .onComplete(r -> {
+          if(r.succeeded()) {
+            LOGGER.info("both completed");
+            startPromise.complete();
+          } else {
+            LOGGER.error("any failed", r.cause());
+            startPromise.fail(r.cause());
+          }
+        });
   }
 }
